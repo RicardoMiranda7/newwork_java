@@ -4,6 +4,7 @@ import com.newwork.backend.dto.AbsenceRequestDTO;
 import com.newwork.backend.service.AbsenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,17 @@ public class AbsenceController {
         absenceRequestDTO);
 
     return ResponseEntity.ok(savedRequestDTO);
+  }
+
+  @PatchMapping(path = "/update-status")
+  public ResponseEntity<AbsenceRequestDTO> updateRequestStatus(
+      @RequestBody AbsenceRequestDTO absenceRequestDTO) {
+
+    // Service handles the update logic
+    AbsenceRequestDTO updatedRequestDTO = absenceService.handleAbsenceStatusChange(
+        absenceRequestDTO);
+
+    return ResponseEntity.ok(updatedRequestDTO);
   }
 
 }

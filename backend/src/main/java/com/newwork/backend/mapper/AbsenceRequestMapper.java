@@ -12,7 +12,6 @@ public interface AbsenceRequestMapper {
   AbsenceRequestDTO toDto(AbsenceRequest absenceRequest);
 
   // Maps DTO -> Entity (for updates)
-  @Mapping(target = "id", ignore = true)
   @Mapping(target = "employee", ignore = true)
   @Mapping(
       target = "status",

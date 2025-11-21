@@ -108,6 +108,71 @@ public class AbsenceService {
   }
 
 
+  @Transactional
+  public AbsenceRequestDTO handleAbsenceStatusChange(
+      AbsenceRequestDTO absenceRequestDTO) {
+
+    // Map DTO to Entity
+    var request = requestMapper.toEntity(absenceRequestDTO);
+
+    // Check if request exists
+    var existingRequest = requestRepository.findById(request.getId())
+        .orElseThrow(() -> new IllegalArgumentException(
+            "Absence request not found"));
+
+    // Extract and validate new status
+    AbsenceStatus newStatus;
+    try {
+      newStatus = absenceRequestDTO.getStatus();
+    } catch (Exception e) {
+      throw new IllegalArgumentException("New status is invalid or missing");
+    }
+
+    //  When multi-year absences are requested, split the validation and debit
+    //  across the years.
+    for (int year = existingRequest.getStartDate().getYear();
+        year <= existingRequest.getEndDate().getYear(); year++) {
+
+      // If rejecting or cancelling, credit the debited days back
+      if (newStatus == AbsenceStatus.REJECTED
+          && existingRequest.getStatus() != AbsenceStatus.REJECTED) {
+
+        // Fetch the original debit transaction, it might not exist
+        // if the request started in the previous year, but
+        // no business days were present in that period.
+        var originalDebit = ledgerRepository.findFirstByAbsenceRequestIdAndYearAndAmountLessThanOrderByCreatedAtAsc(
+            existingRequest.getId(), year, 0);
+        if (originalDebit.isPresent()) {
+          recordTransaction(existingRequest.getEmployee(),
+              existingRequest,
+              year,
+              -originalDebit.get().getAmount(),
+              "Absence request rejected");
+        }
+      } else if (newStatus == AbsenceStatus.PENDING
+          && existingRequest.getStatus() == AbsenceStatus.REJECTED) {
+        // If a rejected request is moved back to PENDING,
+        // we need to re-debit.
+        var originalCredit = ledgerRepository.findFirstByAbsenceRequestIdAndYearAndAmountGreaterThanOrderByCreatedAtAsc(
+            existingRequest.getId(), year, 0);
+        if (originalCredit.isPresent()) {
+          recordTransaction(existingRequest.getEmployee(),
+              existingRequest,
+              year,
+              -originalCredit.get().getAmount(),
+              "Absence request re-opened (PENDING)");
+        }
+      }
+    }
+    // Save the new status
+    existingRequest.setStatus(newStatus);
+    requestRepository.save(existingRequest);
+
+    // Return the DTO
+    return requestMapper.toDto(existingRequest);
+  }
+
+
   /**
    * Validates an absence request against the employee's vacation balance and
    * other vacation periods. If valid, records debit transactions in the absence
