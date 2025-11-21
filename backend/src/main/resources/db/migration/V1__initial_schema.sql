@@ -55,7 +55,7 @@ CREATE TABLE feedback (
 -- Absence Ledger
 CREATE TABLE absence_ledger (
     id                 BIGSERIAL PRIMARY KEY,
-    employee_id         BIGINT       NOT NULL REFERENCES users (id),
+    employee_id BIGINT NOT NULL REFERENCES users (id),
     absence_request_id BIGINT REFERENCES absence_requests (id),
     amount             INT          NOT NULL,
     year               INT          NOT NULL,

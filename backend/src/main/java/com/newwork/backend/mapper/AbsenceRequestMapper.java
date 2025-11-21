@@ -14,5 +14,8 @@ public interface AbsenceRequestMapper {
   // Maps DTO -> Entity (for updates)
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "employee", ignore = true)
+  @Mapping(
+      target = "status",
+      defaultExpression = "java(com.newwork.backend.model.AbsenceStatus.PENDING)")
   AbsenceRequest toEntity(AbsenceRequestDTO dto);
 }
