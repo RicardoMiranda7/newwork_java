@@ -8,5 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface BankHolidayRepository extends
     JpaRepository<BankHoliday, Long> {
 
+  boolean existsByDate(LocalDate date);
   Set<BankHoliday> findByDateBetween(LocalDate dateAfter, LocalDate dateBefore);
 }

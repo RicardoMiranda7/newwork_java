@@ -1,0 +1,44 @@
+package com.newwork.backend.service;
+
+import com.newwork.backend.dto.AuthenticationResponse;
+import com.newwork.backend.dto.LoginRequest;
+import com.newwork.backend.repository.UserRepository;
+import com.newwork.backend.security.JwtService;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+  private final UserRepository userRepository;
+  private final JwtService jwtService;
+  private final AuthenticationManager authenticationManager;
+
+  public AuthenticationResponse authenticate(LoginRequest request) {
+    try {
+      authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(
+              request.getEmail(),
+              request.getPassword())
+      );
+    } catch (BadCredentialsException e) {
+      throw new IllegalArgumentException("Invalid email or password");
+    }
+
+    var user = userRepository.findByEmail(request.getEmail())
+        .orElseThrow();
+
+    // user_id replicates Python behavior
+    var jwtToken = jwtService.generateToken(Map.of("user_id", user.getId()),
+        user);
+
+    return AuthenticationResponse.builder()
+        .access(jwtToken)
+        .build();
+  }
+}

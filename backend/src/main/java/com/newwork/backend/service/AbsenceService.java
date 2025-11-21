@@ -84,19 +84,20 @@ public class AbsenceService {
    * the absence. Whole method is transactional to ensure atomicity, preventing
    * a new absence request being saved even if validation fails.
    *
-   * @param absenceRequestDTO The new absence request DTO
+   * @param absenceRequestDto The new absence request DTO
    */
   @Transactional
   public AbsenceRequestDTO handleNewAbsenceRequest(
-      AbsenceRequestDTO absenceRequestDTO) {
+      AbsenceRequestDTO absenceRequestDto,
+      User user) {
 
     // Map DTO to Entity
-    AbsenceRequest request = requestMapper.toEntity(absenceRequestDTO);
+    AbsenceRequest request = requestMapper.toEntity(absenceRequestDto);
 
-    // Temp: Inject employee - to be replaced with JWT auth service
-    User currentUser = userRepository.findByEmail("johnsmith@example.com")
-        .orElseThrow(() -> new RuntimeException("User not found"));
-    request.setEmployee(currentUser);
+    // Find the current user
+//    User currentUser = userRepository.findByEmail(userEmail)
+//        .orElseThrow(() -> new RuntimeException("User not found"));
+    request.setEmployee(user);
 
     // First, save the absence request to have an ID.
     var newAbsence = requestRepository.save(request);
@@ -110,10 +111,10 @@ public class AbsenceService {
 
   @Transactional
   public AbsenceRequestDTO handleAbsenceStatusChange(
-      AbsenceRequestDTO absenceRequestDTO) {
+      AbsenceRequestDTO absenceRequestDto) {
 
     // Map DTO to Entity
-    var request = requestMapper.toEntity(absenceRequestDTO);
+    var request = requestMapper.toEntity(absenceRequestDto);
 
     // Check if request exists
     var existingRequest = requestRepository.findById(request.getId())
@@ -123,7 +124,7 @@ public class AbsenceService {
     // Extract and validate new status
     AbsenceStatus newStatus;
     try {
-      newStatus = absenceRequestDTO.getStatus();
+      newStatus = absenceRequestDto.getStatus();
     } catch (Exception e) {
       throw new IllegalArgumentException("New status is invalid or missing");
     }

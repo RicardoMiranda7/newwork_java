@@ -1,9 +1,11 @@
 package com.newwork.backend.controller;
 
 import com.newwork.backend.dto.AbsenceRequestDTO;
+import com.newwork.backend.model.User;
 import com.newwork.backend.service.AbsenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,13 +21,15 @@ public class AbsenceController {
 
   @PostMapping
   public ResponseEntity<AbsenceRequestDTO> createRequest(
-      @RequestBody AbsenceRequestDTO absenceRequestDTO) {
+      @RequestBody AbsenceRequestDTO absenceRequestDto,
+      @AuthenticationPrincipal User user) {
 
     // Inject employee from the JWT auth service (currently hardcoded in service layer)
 
     // Service handles the creation logic
     AbsenceRequestDTO savedRequestDTO = absenceService.handleNewAbsenceRequest(
-        absenceRequestDTO);
+        absenceRequestDto,
+        user);
 
     return ResponseEntity.ok(savedRequestDTO);
   }
