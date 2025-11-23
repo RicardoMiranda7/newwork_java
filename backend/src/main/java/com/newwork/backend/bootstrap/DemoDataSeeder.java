@@ -82,6 +82,24 @@ public class DemoDataSeeder implements CommandLineRunner {
         .build();
     absenceRequestRepository.save(absenceRequest);
 
+    AbsenceRequest absenceRequest2 = AbsenceRequest.builder()
+        .employee(johnDoe)
+        .startDate(LocalDate.of(2025, 12, 22))
+        .endDate(LocalDate.of(2025, 12, 29))
+        .status(AbsenceStatus.APPROVED)
+        .reason("Winter Vacation")
+        .build();
+    absenceRequestRepository.save(absenceRequest2);
+
+    AbsenceRequest absenceRequest3 = AbsenceRequest.builder()
+        .employee(johnDoe)
+        .startDate(LocalDate.of(2026, 2, 1))
+        .endDate(LocalDate.of(2026, 2, 10))
+        .status(AbsenceStatus.PENDING)
+        .reason("Ski Vacation")
+        .build();
+    absenceRequestRepository.save(absenceRequest3);
+
     AbsenceLedger absenceLedger = AbsenceLedger.builder()
         .employee(johnSmith)
         .absenceRequest(absenceRequest)

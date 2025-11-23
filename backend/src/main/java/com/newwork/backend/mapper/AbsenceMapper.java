@@ -6,8 +6,7 @@ import com.newwork.backend.model.AbsenceRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {UserMapper.class,
-    ProfileMapper.class})
+@Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface AbsenceMapper {
 
   // Maps Entity -> Full DTO
