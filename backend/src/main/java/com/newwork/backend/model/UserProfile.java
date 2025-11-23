@@ -25,7 +25,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Profile {
+public class UserProfile {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

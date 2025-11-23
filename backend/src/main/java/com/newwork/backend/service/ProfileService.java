@@ -3,8 +3,8 @@ package com.newwork.backend.service;
 import com.newwork.backend.dto.ProfileCoWorkerDTO;
 import com.newwork.backend.dto.ProfileDTO;
 import com.newwork.backend.mapper.ProfileMapper;
-import com.newwork.backend.model.Profile;
 import com.newwork.backend.model.User;
+import com.newwork.backend.model.UserProfile;
 import com.newwork.backend.repository.ProfileRepository;
 import com.newwork.backend.security.ProfileSecurity;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,7 +27,7 @@ public class ProfileService {
 
   @Transactional(readOnly = true)
   public Object getProfileData(Long profileId, User currentUser) {
-    Profile profile = profileRepository.findById(profileId)
+    UserProfile profile = profileRepository.findById(profileId)
         .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
 
     if (profileSecurity.isOwnerOrManager(profileId, currentUser)) {
@@ -39,7 +39,7 @@ public class ProfileService {
 
   @Transactional(readOnly = true)
   public List<ProfileCoWorkerDTO> getAllCoWorkerProfiles() {
-    List<Profile> profiles = profileRepository.findAll();
+    List<UserProfile> profiles = profileRepository.findAll();
     return profiles.stream()
         .map(profileMapper::toCoWorkerDto)
         .collect(Collectors.toList());
@@ -48,7 +48,7 @@ public class ProfileService {
   @Transactional
   public ProfileDTO updateProfile(Long profileId, ProfileDTO profileDTO,
       User currentUser) {
-    Profile profile = profileRepository.findById(profileId)
+    UserProfile profile = profileRepository.findById(profileId)
         .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
 
     // Check if salary is being updated
@@ -63,7 +63,7 @@ public class ProfileService {
 
     // Update entity from DTO and save
     profileMapper.updateEntityFromDto(profileDTO, profile);
-    Profile updatedProfile = profileRepository.save(profile);
+    UserProfile updatedProfile = profileRepository.save(profile);
 
     return profileMapper.toDto(updatedProfile);
   }

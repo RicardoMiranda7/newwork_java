@@ -4,8 +4,8 @@ import com.newwork.backend.model.AbsenceLedger;
 import com.newwork.backend.model.AbsenceRequest;
 import com.newwork.backend.model.AbsenceStatus;
 import com.newwork.backend.model.BankHoliday;
-import com.newwork.backend.model.Profile;
 import com.newwork.backend.model.User;
+import com.newwork.backend.model.UserProfile;
 import com.newwork.backend.repository.AbsenceLedgerRepository;
 import com.newwork.backend.repository.AbsenceRequestRepository;
 import com.newwork.backend.repository.BankHolidayRepository;
@@ -19,6 +19,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j // Lombok annotation for Logging
+@Profile("!test")
 public class DemoDataSeeder implements CommandLineRunner {
 
   private final UserRepository userRepository;
@@ -128,7 +130,7 @@ public class DemoDataSeeder implements CommandLineRunner {
   private void createProfileIfNotFound(User user, User manager, String fullName,
       String jobTitle, BigDecimal salary, String department) {
     if (profileRepository.findByUserId(user.getId()).isEmpty()) {
-      Profile profile = Profile.builder()
+      UserProfile profile = UserProfile.builder()
           .user(user)
           .manager(manager)
           .fullName(fullName)
