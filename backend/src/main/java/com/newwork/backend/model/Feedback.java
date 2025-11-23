@@ -32,7 +32,7 @@ public class Feedback {
   @JoinColumn(name = "profile_id", nullable = false)
   private UserProfile profile; // The receiver
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "author_id", nullable = false)
   private User author; // The writer
 
