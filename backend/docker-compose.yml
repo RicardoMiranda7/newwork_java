@@ -9,8 +9,9 @@ services:
       - POSTGRES_DB=newwork_db
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
-    ports:
-      - "5432:5432"
+  #    Uncomment the following lines to expose PostgreSQL port to host.
+  #    ports:
+  #      - "5432:5432"
 
   backend:
     build: .
