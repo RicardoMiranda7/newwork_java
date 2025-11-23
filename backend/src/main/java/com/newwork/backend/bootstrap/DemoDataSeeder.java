@@ -38,7 +38,14 @@ public class DemoDataSeeder implements CommandLineRunner {
   @Override
   @Transactional
   public void run(String... args) throws Exception {
-    log.info("Starting Demo Data Seeding...");
+    // --- GUARD CLAUSE ---
+    // Check if data already exists. If so, skip seeding.
+    if (userRepository.count() > 0) {
+      log.info("Database already contains data. Skipping demo data seeding.");
+      return;
+    }
+
+    log.info("Database is empty. Starting Demo Data Seeding...");
 
     // 1. Create Manager
     User manager = createUserIfNotFound("manager@example.com", "manager",
@@ -158,13 +165,11 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     int count = 0;
     for (Map.Entry<LocalDate, String> entry : holidays.entrySet()) {
-      if (!bankHolidayRepository.existsByDate(entry.getKey())) {
         bankHolidayRepository.save(BankHoliday.builder()
             .date(entry.getKey())
             .name(entry.getValue())
             .build());
         count++;
-      }
     }
     log.info("{} new bank holidays created.", count);
   }
