@@ -34,7 +34,11 @@ public class SecurityConfiguration {
             corsConfigurationSource())) // Enable CORS
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
-                "/api/v1/token/**", "/api/health",
+                "/api/v1/token/**",
+                // Health check
+                "/api/health",
+                // Actuator endpoints open for demo purposes
+                "/actuator/**",
                 // Swagger UI & API Docs endpoints
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
