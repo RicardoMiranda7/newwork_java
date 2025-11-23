@@ -2,6 +2,7 @@ package com.newwork.backend.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,6 +19,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "profiles")
@@ -25,6 +30,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class UserProfile {
 
   @Id
@@ -63,10 +69,14 @@ public class UserProfile {
   @JoinColumn(name = "manager_id")
   private User manager;
 
-//  @LastModifiedDate
-//  private LocalDateTime updatedAt;
-//
-//  @LastModifiedBy
-//  private String updatedBy; // Stores username
+  @CreatedDate
+  private LocalDateTime createdAt;
+
+  @LastModifiedDate
+  private LocalDateTime updatedAt;
+
+  @LastModifiedBy
+  private String updatedBy; // Stores username
+
 
 }

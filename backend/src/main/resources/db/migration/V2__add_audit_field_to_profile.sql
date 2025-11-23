@@ -1,0 +1,51 @@
+ALTER TABLE profiles
+    ADD created_at TIMESTAMP WITHOUT TIME ZONE;
+
+ALTER TABLE profiles
+    ADD updated_at TIMESTAMP WITHOUT TIME ZONE;
+
+ALTER TABLE profiles
+    ADD updated_by VARCHAR(255);
+
+ALTER TABLE profiles
+ALTER
+COLUMN address TYPE VARCHAR(255) USING (address::VARCHAR(255));
+
+ALTER TABLE profiles
+ALTER
+COLUMN bio TYPE VARCHAR(255) USING (bio::VARCHAR(255));
+
+ALTER TABLE profiles
+ALTER
+COLUMN department TYPE VARCHAR(255) USING (department::VARCHAR(255));
+
+ALTER TABLE absence_ledger
+    ALTER COLUMN description DROP NOT NULL;
+
+ALTER TABLE profiles
+ALTER
+COLUMN gender TYPE VARCHAR(255) USING (gender::VARCHAR(255));
+
+ALTER TABLE profiles
+ALTER
+COLUMN job_title TYPE VARCHAR(255) USING (job_title::VARCHAR(255));
+
+ALTER TABLE bank_holidays
+ALTER
+COLUMN name TYPE VARCHAR(255) USING (name::VARCHAR(255));
+
+ALTER TABLE profiles
+ALTER
+COLUMN phone_number TYPE VARCHAR(255) USING (phone_number::VARCHAR(255));
+
+ALTER TABLE absence_requests
+ALTER
+COLUMN reason TYPE VARCHAR(255) USING (reason::VARCHAR(255));
+
+ALTER TABLE profiles
+ALTER
+COLUMN salary TYPE DECIMAL USING (salary::DECIMAL);
+
+ALTER TABLE absence_requests
+ALTER
+COLUMN status TYPE VARCHAR(255) USING (status::VARCHAR(255));
