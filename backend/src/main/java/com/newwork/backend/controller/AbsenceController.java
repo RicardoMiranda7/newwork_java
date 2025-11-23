@@ -5,6 +5,7 @@ import com.newwork.backend.dto.AbsenceRequestDTO;
 import com.newwork.backend.dto.AbsenceResponseDTO;
 import com.newwork.backend.model.User;
 import com.newwork.backend.service.AbsenceService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/absences")
 @RequiredArgsConstructor
+@Tag(name = "Absences", description = "Operations related to employees absences")
 public class AbsenceController {
 
   private final AbsenceService absenceService;

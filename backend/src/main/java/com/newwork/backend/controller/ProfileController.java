@@ -4,6 +4,7 @@ import com.newwork.backend.dto.ProfileCoWorkerDTO;
 import com.newwork.backend.dto.ProfileDTO;
 import com.newwork.backend.model.User;
 import com.newwork.backend.service.ProfileService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/profiles")
 @RequiredArgsConstructor
+@Tag(name = "Profiles", description = "Operations related to employee profiles")
 public class ProfileController {
 
   private final ProfileService profileService;

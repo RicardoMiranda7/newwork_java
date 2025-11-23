@@ -33,7 +33,12 @@ public class SecurityConfiguration {
         .cors(cors -> cors.configurationSource(
             corsConfigurationSource())) // Enable CORS
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/v1/token/**", "/api/health")
+            .requestMatchers(
+                "/api/v1/token/**", "/api/health",
+                // Swagger UI & API Docs endpoints
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html")
             .permitAll() // Public endpoints
             .anyRequest().authenticated() // Everything else requires token
         )
