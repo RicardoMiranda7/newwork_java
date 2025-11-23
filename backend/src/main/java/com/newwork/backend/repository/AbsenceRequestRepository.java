@@ -29,4 +29,18 @@ public interface AbsenceRequestRepository extends
       @Param("endDate") LocalDate endDate,
       @Param("excludeId") Long excludeId
   );
+
+  // Using JOIN FETCH to eagerly load associated Employee data, since LAZY was set
+  @Query("""
+      SELECT a FROM AbsenceRequest a
+      JOIN FETCH a.employee
+      WHERE (a.status = 'APPROVED'
+             OR (a.employee.id = :employeeId AND a.status <> 'APPROVED'))
+        AND (extract(year from a.startDate) = :year
+             OR extract(year from a.endDate) = :year)
+      """)
+  List<AbsenceRequest> fillAllApprovedOrUserRequestsByYear(
+      @Param("employeeId") long employeeId,
+      @Param("year") int year
+  );
 }

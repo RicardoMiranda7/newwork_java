@@ -1,7 +1,9 @@
 package com.newwork.backend.service;
 
+import com.newwork.backend.dto.AbsenceBalanceResponse;
 import com.newwork.backend.dto.AbsenceRequestDTO;
-import com.newwork.backend.mapper.AbsenceRequestMapper;
+import com.newwork.backend.dto.AbsenceResponseDTO;
+import com.newwork.backend.mapper.AbsenceMapper;
 import com.newwork.backend.model.AbsenceLedger;
 import com.newwork.backend.model.AbsenceRequest;
 import com.newwork.backend.model.AbsenceStatus;
@@ -28,7 +30,7 @@ public class AbsenceService {
   private final UserRepository userRepository;
   private final BankHolidayRepository bankHolidayRepository;
 
-  private final AbsenceRequestMapper requestMapper;
+  private final AbsenceMapper requestMapper;
 
   private static final int YEARLY_VACATION_ALLOWANCE = 25;
 
@@ -94,9 +96,7 @@ public class AbsenceService {
     // Map DTO to Entity
     AbsenceRequest request = requestMapper.toEntity(absenceRequestDto);
 
-    // Find the current user
-//    User currentUser = userRepository.findByEmail(userEmail)
-//        .orElseThrow(() -> new RuntimeException("User not found"));
+    // Set the current user
     request.setEmployee(user);
 
     // First, save the absence request to have an ID.
@@ -173,6 +173,36 @@ public class AbsenceService {
     return requestMapper.toDto(existingRequest);
   }
 
+
+  public AbsenceBalanceResponse handleAbsenceBalanceRequest(
+      Long profileId,
+      int year) {
+
+    // Fetch the user for whom to get the balance
+    User user = userRepository.findById(profileId)
+        .orElseThrow(() -> new IllegalArgumentException(
+            "User not found"));
+
+    int balance = getVacationBalance(user, year);
+    int nextYearBalance = getVacationBalance(user, year + 1);
+
+    return AbsenceBalanceResponse.builder()
+        .year(year)
+        .vacationDaysAllowance(YEARLY_VACATION_ALLOWANCE)
+        .vacationDaysBalance(balance)
+        .vacationDaysBalanceNextYear(nextYearBalance)
+        .build();
+  }
+
+  public List<AbsenceResponseDTO> handleListVisibleAbsencesForUser(User user,
+      int year) {
+
+    return requestRepository.fillAllApprovedOrUserRequestsByYear(user.getId(),
+            year)
+        .stream()
+        .map(requestMapper::toResponseDto)
+        .toList();
+  }
 
   /**
    * Validates an absence request against the employee's vacation balance and
