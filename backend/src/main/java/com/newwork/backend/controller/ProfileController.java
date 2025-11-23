@@ -1,12 +1,18 @@
 package com.newwork.backend.controller;
 
+import com.newwork.backend.dto.ProfileCoWorkerDTO;
+import com.newwork.backend.dto.ProfileDTO;
 import com.newwork.backend.model.User;
 import com.newwork.backend.service.ProfileService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +30,37 @@ public class ProfileController {
     Object profileData = profileService.getProfileData(id, user);
 
     return ResponseEntity.ok(profileData);
+  }
+
+  /**
+   * Endpoint to list all co-worker profiles with restricted information.
+   *
+   * @return List of ProfileCoWorkerDTOs
+   */
+  @GetMapping("/")
+  public ResponseEntity<List<ProfileCoWorkerDTO>> getAllCoWorkerProfiles() {
+    var profiles = profileService.getAllCoWorkerProfiles();
+    return ResponseEntity.ok(profiles);
+  }
+
+  /**
+   * Endpoint to update a profile. Only the profile owner or their manager can
+   * perform this operation.
+   *
+   * @param id          ID of the profile to update
+   * @param profileDto  Profile data to update
+   * @param currentUser Currently authenticated user
+   * @return Updated ProfileDTO
+   */
+  @PutMapping("/{id}")
+  @PreAuthorize("@profileSecurity.isOwnerOrManager(#id, #currentUser)")
+  public ResponseEntity<ProfileDTO> updateProfile(
+      @PathVariable Long id,
+      @RequestBody ProfileDTO profileDto,
+      @AuthenticationPrincipal User currentUser
+  ) {
+    return ResponseEntity.ok(
+        profileService.updateProfile(id, profileDto, currentUser));
   }
 
 }
