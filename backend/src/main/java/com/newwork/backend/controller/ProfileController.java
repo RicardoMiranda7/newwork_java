@@ -5,8 +5,10 @@ import com.newwork.backend.dto.ProfileDTO;
 import com.newwork.backend.model.User;
 import com.newwork.backend.service.ProfileService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,9 +42,10 @@ public class ProfileController {
    * @return List of ProfileCoWorkerDTOs
    */
   @GetMapping("/")
-  public ResponseEntity<List<ProfileCoWorkerDTO>> getAllCoWorkerProfiles() {
-    var profiles = profileService.getAllCoWorkerProfiles();
-    return ResponseEntity.ok(profiles);
+  public ResponseEntity<Page<ProfileCoWorkerDTO>> getAllProfiles(
+      @PageableDefault(size = 20, sort = "fullName") Pageable pageable
+  ) {
+    return ResponseEntity.ok(profileService.getAllProfiles(pageable));
   }
 
   /**

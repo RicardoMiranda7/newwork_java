@@ -8,10 +8,10 @@ import com.newwork.backend.model.UserProfile;
 import com.newwork.backend.repository.ProfileRepository;
 import com.newwork.backend.security.ProfileSecurity;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,11 +38,9 @@ public class ProfileService {
   }
 
   @Transactional(readOnly = true)
-  public List<ProfileCoWorkerDTO> getAllCoWorkerProfiles() {
-    List<UserProfile> profiles = profileRepository.findAll();
-    return profiles.stream()
-        .map(profileMapper::toCoWorkerDto)
-        .collect(Collectors.toList());
+  public Page<ProfileCoWorkerDTO> getAllProfiles(Pageable pageable) {
+    return profileRepository.findAll(pageable)
+        .map(profileMapper::toCoWorkerDto);
   }
 
   @Transactional

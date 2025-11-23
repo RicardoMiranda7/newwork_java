@@ -3,6 +3,8 @@ package com.newwork.backend;
 import java.util.Map;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 // @EnableAutoConfiguration: Tells Spring Boot to start adding beans based on classpath settings.
 // @ComponentScan: Tells Spring to look for other components, configurations, and services in this package.
 @SpringBootApplication
+@EnableSpringDataWebSupport(pageSerializationMode = PageSerializationMode.VIA_DTO)
 public class BackendApplication {
 
   public static void main(String[] args) {

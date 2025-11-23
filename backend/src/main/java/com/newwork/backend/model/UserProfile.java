@@ -31,7 +31,7 @@ public class UserProfile {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "user_id", nullable = false, unique = true)
   private User user;
 
@@ -59,7 +59,14 @@ public class UserProfile {
 
   private String department;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "manager_id")
   private User manager;
+
+//  @LastModifiedDate
+//  private LocalDateTime updatedAt;
+//
+//  @LastModifiedBy
+//  private String updatedBy; // Stores username
+
 }
