@@ -10,10 +10,12 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 // componentModel = "spring" allows to inject this mapper using @Autowired
-@Mapper(componentModel = "spring", uses = {UserMapper.class})
+@Mapper(componentModel = "spring")
 public interface ProfileMapper {
 
-  // Maps Entity -> Full DTO
+  // Maps Entity -> Flattened DTO
+  @Mapping(source = "user.email", target = "user")
+  @Mapping(source = "manager.email", target = "manager")
   ProfileDTO toDto(Profile profile);
 
   // Maps Entity -> Restricted DTO

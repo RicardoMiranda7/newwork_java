@@ -1,11 +1,11 @@
 package com.newwork.backend.controller;
 
 import com.newwork.backend.dto.AbsenceBalanceResponse;
-import com.newwork.backend.dto.AbsenceRequestDTO;
-import com.newwork.backend.dto.AbsenceResponseDTO;
+import com.newwork.backend.dto.AbsenceDTO;
 import com.newwork.backend.model.User;
 import com.newwork.backend.service.AbsenceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,14 +28,12 @@ public class AbsenceController {
   private final AbsenceService absenceService;
 
   @PostMapping
-  public ResponseEntity<AbsenceRequestDTO> createRequest(
-      @RequestBody AbsenceRequestDTO absenceRequestDto,
+  public ResponseEntity<AbsenceDTO> createRequest(
+      @Valid @RequestBody AbsenceDTO absenceRequestDto,
       @AuthenticationPrincipal User user) {
 
-    // Inject employee from the JWT auth service (currently hardcoded in service layer)
-
     // Service handles the creation logic
-    AbsenceRequestDTO savedRequestDTO = absenceService.handleNewAbsenceRequest(
+    AbsenceDTO savedRequestDTO = absenceService.handleNewAbsenceRequest(
         absenceRequestDto,
         user);
 
@@ -43,7 +41,7 @@ public class AbsenceController {
   }
 
   @GetMapping
-  public ResponseEntity<List<AbsenceResponseDTO>> getVisibleAbsenceForUser(
+  public ResponseEntity<List<AbsenceDTO>> getVisibleAbsenceForUser(
       @AuthenticationPrincipal User user) {
     // Service handles the creation logic
     var listOfAbsences = absenceService.handleListVisibleAbsencesForUser(
@@ -53,8 +51,8 @@ public class AbsenceController {
   }
 
   @PatchMapping(path = "/update-status")
-  public ResponseEntity<AbsenceRequestDTO> updateRequestStatus(
-      @RequestBody AbsenceRequestDTO absenceRequestDTO) {
+  public ResponseEntity<AbsenceDTO> updateRequestStatus(
+      @RequestBody AbsenceDTO absenceRequestDTO) {
 
     // Service handles the update logic
     var updatedRequestDTO = absenceService.handleAbsenceStatusChange(

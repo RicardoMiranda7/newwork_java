@@ -1,8 +1,7 @@
 package com.newwork.backend.service;
 
 import com.newwork.backend.dto.AbsenceBalanceResponse;
-import com.newwork.backend.dto.AbsenceRequestDTO;
-import com.newwork.backend.dto.AbsenceResponseDTO;
+import com.newwork.backend.dto.AbsenceDTO;
 import com.newwork.backend.mapper.AbsenceMapper;
 import com.newwork.backend.model.AbsenceLedger;
 import com.newwork.backend.model.AbsenceRequest;
@@ -86,15 +85,15 @@ public class AbsenceService {
    * the absence. Whole method is transactional to ensure atomicity, preventing
    * a new absence request being saved even if validation fails.
    *
-   * @param absenceRequestDto The new absence request DTO
+   * @param absenceDto The new absence request DTO
    */
   @Transactional
-  public AbsenceRequestDTO handleNewAbsenceRequest(
-      AbsenceRequestDTO absenceRequestDto,
+  public AbsenceDTO handleNewAbsenceRequest(
+      AbsenceDTO absenceDto,
       User user) {
 
     // Map DTO to Entity
-    AbsenceRequest request = requestMapper.toEntity(absenceRequestDto);
+    AbsenceRequest request = requestMapper.toEntity(absenceDto);
 
     // Set the current user
     request.setEmployee(user);
@@ -110,11 +109,11 @@ public class AbsenceService {
 
 
   @Transactional
-  public AbsenceRequestDTO handleAbsenceStatusChange(
-      AbsenceRequestDTO absenceRequestDto) {
+  public AbsenceDTO handleAbsenceStatusChange(
+      AbsenceDTO absenceDto) {
 
     // Map DTO to Entity
-    var request = requestMapper.toEntity(absenceRequestDto);
+    var request = requestMapper.toEntity(absenceDto);
 
     // Check if request exists
     var existingRequest = requestRepository.findById(request.getId())
@@ -124,7 +123,7 @@ public class AbsenceService {
     // Extract and validate new status
     AbsenceStatus newStatus;
     try {
-      newStatus = absenceRequestDto.getStatus();
+      newStatus = absenceDto.getStatus();
     } catch (Exception e) {
       throw new IllegalArgumentException("New status is invalid or missing");
     }
@@ -194,13 +193,13 @@ public class AbsenceService {
         .build();
   }
 
-  public List<AbsenceResponseDTO> handleListVisibleAbsencesForUser(User user,
+  public List<AbsenceDTO> handleListVisibleAbsencesForUser(User user,
       int year) {
 
     return requestRepository.fillAllApprovedOrUserRequestsByYear(user.getId(),
             year)
         .stream()
-        .map(requestMapper::toResponseDto)
+        .map(requestMapper::toDto)
         .toList();
   }
 

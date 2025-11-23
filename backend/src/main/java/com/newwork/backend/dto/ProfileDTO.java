@@ -9,7 +9,7 @@ import lombok.Data;
 public class ProfileDTO {
 
   private Long id;
-  private UserSummaryDTO user; // Nested DTO
+  private String user;
   private String fullName;
   private String jobTitle;
   private BigDecimal salary; // Sensitive
@@ -20,5 +20,5 @@ public class ProfileDTO {
   private String bio;
   private LocalDateTime joinedAt;
   private String department;
-  private UserSummaryDTO manager;
+  private String manager;
 }

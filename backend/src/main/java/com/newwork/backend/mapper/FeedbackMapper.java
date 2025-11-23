@@ -5,7 +5,7 @@ import com.newwork.backend.model.Feedback;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {UserMapper.class})
+@Mapper(componentModel = "spring")
 public interface FeedbackMapper {
 
   // Maps Entity -> Full DTO
