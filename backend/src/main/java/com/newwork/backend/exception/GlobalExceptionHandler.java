@@ -1,5 +1,8 @@
 package com.newwork.backend.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +44,23 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Map<String, String>> handleBadCredentialsException(
       BadCredentialsException ex) {
     return new ResponseEntity<>(Map.of("error", "Invalid email or password"),
+        HttpStatus.UNAUTHORIZED);
+  }
+
+  // Handle Expired JWTs
+  @ExceptionHandler(ExpiredJwtException.class)
+  public ResponseEntity<Map<String, String>> handleExpiredJwt(
+      ExpiredJwtException ex) {
+    return new ResponseEntity<>(
+        Map.of("error", "Token expired", "message", "Please log in again."),
+        HttpStatus.UNAUTHORIZED);
+  }
+
+  // Handle Invalid Signatures / Malformed Tokens
+  @ExceptionHandler({SignatureException.class, MalformedJwtException.class})
+  public ResponseEntity<Map<String, String>> handleInvalidJwt(Exception ex) {
+    return new ResponseEntity<>(
+        Map.of("error", "Invalid Token", "message", "The token is invalid."),
         HttpStatus.UNAUTHORIZED);
   }
 

@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -24,6 +25,7 @@ public class SecurityConfiguration {
 
   private final JwtAuthenticationFilter jwtAuthFilter;
   private final AuthenticationProvider authenticationProvider;
+  private final AuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -46,6 +48,8 @@ public class SecurityConfiguration {
             .permitAll() // Public endpoints
             .anyRequest().authenticated() // Everything else requires token
         )
+        .exceptionHandling(exception -> exception
+            .authenticationEntryPoint(jwtAuthenticationEntryPoint))
         .sessionManagement(
             sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider)
