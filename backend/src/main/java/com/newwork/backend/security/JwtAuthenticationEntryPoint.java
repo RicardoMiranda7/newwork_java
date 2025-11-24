@@ -1,17 +1,27 @@
 package com.newwork.backend.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newwork.backend.dto.ApiErrorResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
+import java.time.LocalDateTime;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+
+/**
+ * Handles unauthorized access attempts by returning a structured JSON error
+ * response. Since it happens before request reaches controller, the response it
+ * built here directly.
+ */
 @Component
+@Slf4j
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
   @Override
@@ -22,11 +32,20 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    // You can customize the message here
-    Map<String, String> error = Map.of("error", "Unauthorized", "message",
-        "Authentication token is missing or invalid.");
+    // Get correlation ID set the Filter
+    String correlationId = (String) request.getAttribute("correlationId");
 
-    objectMapper.writeValue(response.getOutputStream(), error);
+    ApiErrorResponse errorResponse = ApiErrorResponse.builder()
+        .timestamp(LocalDateTime.now())
+        .status(HttpStatus.UNAUTHORIZED.value())
+        .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+        .message("Authentication token is missing or invalid.")
+        .path(request.getRequestURI())
+        .correlationId(correlationId)
+        .build();
+    log.warn("JWT Error: Token is invalid or expired.");
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.writeValue(response.getOutputStream(), errorResponse);
   }
 }

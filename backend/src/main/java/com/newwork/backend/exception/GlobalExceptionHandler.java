@@ -1,10 +1,12 @@
 package com.newwork.backend.exception;
 
+import com.newwork.backend.dto.ApiErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,88 +18,121 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+/**
+ * Global exception handler to catch and process exceptions thrown by
+ * controllers. Translates exceptions into standardized JSON error responses.
+ */
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
+
+  // Helper method to build the standard response
+  private ResponseEntity<ApiErrorResponse> buildResponse(HttpStatus status,
+      String message, HttpServletRequest request) {
+    String correlationId = (String) request.getAttribute("correlationId");
+
+    ApiErrorResponse response = ApiErrorResponse.builder()
+        .timestamp(LocalDateTime.now())
+        .status(status.value())
+        .error(status.getReasonPhrase())
+        .message(message)
+        .path(request.getRequestURI())
+        .correlationId(correlationId)
+        .build();
+
+    return new ResponseEntity<>(response, status);
+  }
+
   // 400 Bad Request - Logical errors
   @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<Map<String, String>> handleIllegalArgumentException(
-      IllegalArgumentException ex) {
-    return new ResponseEntity<>(Map.of("error", ex.getMessage()),
-        HttpStatus.BAD_REQUEST);
+  public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(
+      IllegalArgumentException ex,
+      HttpServletRequest request) {
+
+    log.warn("Bad Request: {}", ex.getMessage());
+    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
   }
 
   // 400 Bad Request - Validation errors
   // Handle Validation Errors (e.g. missing fields)
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Map<String, String>> handleValidationExceptions(
-      MethodArgumentNotValidException ex) {
-    Map<String, String> errors = new HashMap<>();
-    ex.getBindingResult().getFieldErrors().forEach(error ->
-        errors.put(error.getField(), error.getDefaultMessage()));
-    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+  public ResponseEntity<ApiErrorResponse> handleValidationExceptions(
+      MethodArgumentNotValidException ex,
+      HttpServletRequest request) {
+    // Combine all validation errors into one string
+    String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+        .map(error -> error.getField() + ": " + error.getDefaultMessage())
+        .collect(Collectors.joining(", "));
+
+    log.warn("Bad Request: {}", ex.getMessage());
+    return buildResponse(HttpStatus.BAD_REQUEST, errorMessage, request);
   }
+
 
   // 401 Unauthorized - Login failed
   @ExceptionHandler(BadCredentialsException.class)
-  public ResponseEntity<Map<String, String>> handleBadCredentialsException(
-      BadCredentialsException ex) {
-    return new ResponseEntity<>(Map.of("error", "Invalid email or password"),
-        HttpStatus.UNAUTHORIZED);
+  public ResponseEntity<ApiErrorResponse> handleBadCredentialsException(
+      BadCredentialsException ex,
+      HttpServletRequest request) {
+
+    log.warn("Authentication Failed: {}", ex.getMessage());
+    return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password",
+        request);
   }
 
   // Handle Expired JWTs
-  @ExceptionHandler(ExpiredJwtException.class)
-  public ResponseEntity<Map<String, String>> handleExpiredJwt(
-      ExpiredJwtException ex) {
-    return new ResponseEntity<>(
-        Map.of("error", "Token expired", "message", "Please log in again."),
-        HttpStatus.UNAUTHORIZED);
-  }
+  // Aggregate JWT related exceptions
+  @ExceptionHandler({ExpiredJwtException.class, SignatureException.class,
+      MalformedJwtException.class})
+  public ResponseEntity<ApiErrorResponse> handleJwtExceptions(Exception ex,
+      HttpServletRequest request) {
 
-  // Handle Invalid Signatures / Malformed Tokens
-  @ExceptionHandler({SignatureException.class, MalformedJwtException.class})
-  public ResponseEntity<Map<String, String>> handleInvalidJwt(Exception ex) {
-    return new ResponseEntity<>(
-        Map.of("error", "Invalid Token", "message", "The token is invalid."),
-        HttpStatus.UNAUTHORIZED);
+    log.warn("JWT Error: {}", ex.getMessage());
+    return buildResponse(HttpStatus.UNAUTHORIZED,
+        "Token is invalid or expired.", request);
   }
 
   // 403 Forbidden - Authenticated but not allowed (e.g. Employee trying to edit salary)
   @ExceptionHandler(AccessDeniedException.class)
-  public ResponseEntity<Map<String, String>> handleAccessDeniedException(
-      AccessDeniedException ex) {
-    return new ResponseEntity<>(
-        Map.of("error", "You do not have permission to perform this action."),
-        HttpStatus.FORBIDDEN);
+  public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(
+      AccessDeniedException ex,
+      HttpServletRequest request) {
+
+    log.warn("Access Denied: User tried to access {}", ex.getMessage());
+    return buildResponse(HttpStatus.FORBIDDEN,
+        "You do not have permission to perform this action.", request);
   }
 
   // 404 Not Found - URL or Resource not found
   @ExceptionHandler(NoResourceFoundException.class)
-  public ResponseEntity<Map<String, String>> handleResourceNotFound(
-      NoResourceFoundException ex) {
-    return new ResponseEntity<>(Map.of("error", ex.getMessage()),
-        HttpStatus.NOT_FOUND);
+  public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
+      NoResourceFoundException ex,
+      HttpServletRequest request) {
+
+    log.warn("Resource Not Found: {}", ex.getMessage());
+    return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
   }
 
   // 404 Not Found - User or Profile not found
   @ExceptionHandler(UsernameNotFoundException.class)
-  public ResponseEntity<Map<String, String>> handleUserNotFound(
-      UsernameNotFoundException ex) {
-    return new ResponseEntity<>(Map.of("error", ex.getMessage()),
-        HttpStatus.NOT_FOUND);
+  public ResponseEntity<ApiErrorResponse> handleUserNotFound(
+      UsernameNotFoundException ex,
+      HttpServletRequest request) {
+
+    log.warn("User Not Found: {}", ex.getMessage());
+    return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
   }
 
   // 500 Internal Server Error - Catch-all
-  @ExceptionHandler(Exception.class)
   // Catch Exception instead of RuntimeException to be safer
-  public ResponseEntity<Map<String, String>> handleGeneralException(
-      Exception ex) {
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ApiErrorResponse> handleGeneralException(
+      Exception ex,
+      HttpServletRequest request) {
+
     log.error("Unexpected error: ", ex);
-    return new ResponseEntity<>(
-        Map.of("error", "An unexpected error occurred."),
-        HttpStatus.INTERNAL_SERVER_ERROR
-    );
+    return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+        "An unexpected error occurred.", request);
   }
 }
