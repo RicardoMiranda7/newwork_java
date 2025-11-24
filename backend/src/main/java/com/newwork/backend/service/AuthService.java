@@ -7,7 +7,6 @@ import com.newwork.backend.security.JwtService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -20,15 +19,11 @@ public class AuthService {
   private final AuthenticationManager authenticationManager;
 
   public AuthenticationResponse authenticate(LoginRequest request) {
-    try {
       authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(
               request.getEmail(),
               request.getPassword())
       );
-    } catch (BadCredentialsException e) {
-      throw new IllegalArgumentException("Invalid email or password");
-    }
 
     var user = userRepository.findByEmail(request.getEmail())
         .orElseThrow();

@@ -19,10 +19,20 @@ import org.springframework.stereotype.Component;
  * Handles unauthorized access attempts by returning a structured JSON error
  * response. Since it happens before request reaches controller, the response it
  * built here directly.
+ * <p>
+ * Entry point runs before Spring MVC converts controller return values,
+ * so it's necessary to serialize the error object manually and write raw JSON
+ * into the servlet response.
  */
 @Component
 @Slf4j
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+  private final ObjectMapper objectMapper;
+
+  public JwtAuthenticationEntryPoint(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   @Override
   public void commence(HttpServletRequest request, HttpServletResponse response,
@@ -45,7 +55,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         .build();
     log.warn("JWT Error: Token is invalid or expired.");
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.writeValue(response.getOutputStream(), errorResponse);
+    response.getOutputStream()
+        .write(objectMapper.writeValueAsBytes(errorResponse));
+    response.getOutputStream().flush();
   }
 }

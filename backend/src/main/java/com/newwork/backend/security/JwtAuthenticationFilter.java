@@ -39,8 +39,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     try {
       if (authHeader == null || !authHeader.startsWith("Bearer ")) {
         filterChain.doFilter(request, response);
-//        throw new AuthenticationCredentialsNotFoundException(
-//            "Authorization header missing or does not start with Bearer");
         return;
       }
 
