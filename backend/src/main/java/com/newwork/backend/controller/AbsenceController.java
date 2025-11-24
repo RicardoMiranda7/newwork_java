@@ -27,7 +27,7 @@ public class AbsenceController {
 
   private final AbsenceService absenceService;
 
-  @PostMapping
+  @PostMapping("/")
   public ResponseEntity<AbsenceDTO> createRequest(
       @Valid @RequestBody AbsenceDTO absenceRequestDto,
       @AuthenticationPrincipal User user) {
@@ -40,7 +40,7 @@ public class AbsenceController {
     return ResponseEntity.ok(savedRequestDTO);
   }
 
-  @GetMapping
+  @GetMapping("/")
   public ResponseEntity<List<AbsenceDTO>> getVisibleAbsencesForUser(
       @RequestParam(required = false) Integer year,
       @AuthenticationPrincipal User user) {

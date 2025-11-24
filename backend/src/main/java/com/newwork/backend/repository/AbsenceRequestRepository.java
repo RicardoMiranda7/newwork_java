@@ -39,7 +39,7 @@ public interface AbsenceRequestRepository extends
         AND (extract(year from a.startDate) = :year
              OR extract(year from a.endDate) = :year)
       """)
-  List<AbsenceRequest> fillAllApprovedOrUserRequestsByYear(
+  List<AbsenceRequest> findAllApprovedOrUserRequestsByYear(
       @Param("employeeId") long employeeId,
       @Param("year") int year
   );
