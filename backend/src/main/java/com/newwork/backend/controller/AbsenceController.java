@@ -41,11 +41,14 @@ public class AbsenceController {
   }
 
   @GetMapping
-  public ResponseEntity<List<AbsenceDTO>> getVisibleAbsenceForUser(
+  public ResponseEntity<List<AbsenceDTO>> getVisibleAbsencesForUser(
+      @RequestParam(required = false) Integer year,
       @AuthenticationPrincipal User user) {
-    // Service handles the creation logic
+    // User current year if not provided
+    int absenceYear = (year != null) ? year : java.time.Year.now().getValue();
+
     var listOfAbsences = absenceService.handleListVisibleAbsencesForUser(
-        user, 2025);
+        user, absenceYear);
 
     return ResponseEntity.ok(listOfAbsences);
   }

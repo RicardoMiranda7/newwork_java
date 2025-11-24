@@ -80,7 +80,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         .startDate(LocalDate.of(2025, 12, 22))
         .endDate(LocalDate.of(2025, 12, 29))
         .status(AbsenceStatus.APPROVED)
-        .reason("Winter Vacation")
+        .reason("Winter Vacation 2025")
         .build();
     absenceRequestRepository.save(absenceRequest);
 
@@ -89,7 +89,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         .startDate(LocalDate.of(2025, 12, 22))
         .endDate(LocalDate.of(2025, 12, 29))
         .status(AbsenceStatus.APPROVED)
-        .reason("Winter Vacation")
+        .reason("Winter Vacation 2025")
         .build();
     absenceRequestRepository.save(absenceRequest2);
 
@@ -110,7 +110,25 @@ public class DemoDataSeeder implements CommandLineRunner {
         .description("Winter Vacation 2025")
         .build();
     absenceLedgerRepository.save(absenceLedger);
-    log.info("Absence request and ledger entry created.");
+
+    AbsenceLedger absenceLedger2 = AbsenceLedger.builder()
+        .employee(johnDoe)
+        .absenceRequest(absenceRequest)
+        .year(2025)
+        .amount(-5)
+        .description("Winter Vacation 2025")
+        .build();
+    absenceLedgerRepository.save(absenceLedger2);
+
+    AbsenceLedger absenceLedger3 = AbsenceLedger.builder()
+        .employee(johnDoe)
+        .absenceRequest(absenceRequest)
+        .year(2026)
+        .amount(-7)
+        .description("Winter Vacation 2026")
+        .build();
+    absenceLedgerRepository.save(absenceLedger3);
+    log.info("Absence requests and ledger entries created.");
 
     log.info("Demo data generation complete!");
   }
