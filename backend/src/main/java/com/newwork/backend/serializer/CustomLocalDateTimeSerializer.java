@@ -1,4 +1,4 @@
-package com.newwork.backend.util;
+package com.newwork.backend.serializer;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -3,7 +3,6 @@ package com.newwork.backend.security;
 import com.newwork.backend.model.AbsenceRequest;
 import com.newwork.backend.model.User;
 import com.newwork.backend.repository.AbsenceRequestRepository;
-import com.newwork.backend.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -15,7 +14,6 @@ public class AbsenceSecurity {
 
   private final AbsenceRequestRepository absenceRequestRepository;
   private final ProfileSecurity profileSecurity;
-  private final ProfileService profileService;
 
   public enum UpdateRole {
     MANAGER,
@@ -29,8 +27,8 @@ public class AbsenceSecurity {
    * Determines if the current user is MANAGER or OWNER of the absence request
    * they are trying to update.
    *
-   * @Throws AccessDeniedException if the user has no rights.
-   * @Return MANAGER or OWNER
+   * @throws AccessDeniedException if the user has no rights.
+   * @return MANAGER or OWNER
    */
   @Transactional(readOnly = true)
   public UpdateRole getUpdateRole(Long absenceId, User currentUser) {
@@ -39,7 +37,7 @@ public class AbsenceSecurity {
             () -> new IllegalArgumentException("Absence request not found"));
 
     // Fetch the user profile for this absence
-    var profileOfAbsence = profileService.getProfileOfUser(
+    var profileOfAbsence = profileSecurity.getProfileOfUser(
         request.getEmployee());
 
     // 1. Check if Manager

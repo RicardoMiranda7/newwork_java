@@ -3,6 +3,7 @@ package com.newwork.backend.security;
 import com.newwork.backend.model.User;
 import com.newwork.backend.model.UserProfile;
 import com.newwork.backend.repository.ProfileRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -50,4 +51,8 @@ public class ProfileSecurity {
         profile.getUser().getId().equals(currentUser.getId());
   }
 
+  public UserProfile getProfileOfUser(User user) {
+    return profileRepository.findByUserId(user.getId())
+        .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+  }
 }

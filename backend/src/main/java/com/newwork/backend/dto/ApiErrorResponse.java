@@ -1,7 +1,7 @@
 package com.newwork.backend.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.newwork.backend.util.CustomLocalDateTimeSerializer;
+import com.newwork.backend.serializer.CustomLocalDateTimeSerializer;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
