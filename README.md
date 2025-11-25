@@ -48,18 +48,18 @@ The application is fully containerized with Docker for consistent and reliable d
 ### Production Environment (Unified Build)
 1. **Build and Run**
    - From the project root, run
-         ```bash
-         docker-compose up --build
-         ```
+    ```bash
+    docker-compose up --build
+    ```
 
-2. **Access the Application**
+3. **Access the Application**
    - API Documentation (Swagger): http://localhost:8080/swagger-ui/index.html
 
-3. **Stop the Application**
-    - To stop the application, run:
-       ```bash
-       docker-compose down
-       ```
+4. **Stop the Application**
+   - To stop the application, run:
+    ```bash
+    docker-compose down
+    ```
 ---
 
 ### Development Environment (Services Run in IDEs)
