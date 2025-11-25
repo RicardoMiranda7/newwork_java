@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -107,6 +108,17 @@ public class GlobalExceptionHandler {
 
     log.warn("User Not Found: {}", ex.getMessage());
     return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+  }
+
+  // 405 Method Not Allowed - Client requests method not allowed
+  @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+  public ResponseEntity<ApiErrorResponse> handleHttpMethodNotSupported(
+      Exception ex,
+      HttpServletRequest request) {
+
+    log.warn("Client requested method not allowed: ", ex);
+    return buildResponse(HttpStatus.METHOD_NOT_ALLOWED,
+        ex.getMessage(), request);
   }
 
   // 500 Internal Server Error - Catch-all
