@@ -1,11 +1,12 @@
 package com.newwork.backend.exception;
 
+import static com.newwork.backend.util.ApiErrorUtils.buildResponse;
+
 import com.newwork.backend.dto.ApiErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,24 +27,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @Slf4j
 public class GlobalExceptionHandler {
 
-
-  // Helper method to build the standard response
-  private ResponseEntity<ApiErrorResponse> buildResponse(HttpStatus status,
-      String message, HttpServletRequest request) {
-    String correlationId = (String) request.getAttribute("correlationId");
-
-    ApiErrorResponse response = ApiErrorResponse.builder()
-        .timestamp(LocalDateTime.now())
-        .status(status.value())
-        .error(status.getReasonPhrase())
-        .message(message)
-        .path(request.getRequestURI())
-        .correlationId(correlationId)
-        .build();
-
-    return new ResponseEntity<>(response, status);
-  }
-
   // 400 Bad Request - Logical errors
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(
@@ -51,7 +34,8 @@ public class GlobalExceptionHandler {
       HttpServletRequest request) {
 
     log.warn("Bad Request: {}", ex.getMessage());
-    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request,
+        ex.getMessage());
   }
 
   // 400 Bad Request - Validation errors
@@ -99,9 +83,10 @@ public class GlobalExceptionHandler {
       AccessDeniedException ex,
       HttpServletRequest request) {
 
-    log.warn("Access Denied: User tried to access {}", ex.getMessage());
+    log.warn("Access Denied: {}", ex.getMessage());
     return buildResponse(HttpStatus.FORBIDDEN,
-        "You do not have permission to perform this action.", request);
+        "You do not have permission to perform this action.", request,
+        ex.getMessage());
   }
 
   // 404 Not Found - URL or Resource not found

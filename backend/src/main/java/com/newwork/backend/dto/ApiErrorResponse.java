@@ -14,6 +14,7 @@ public class ApiErrorResponse {
   private int status;
   private String error;    // Short error name (e.g., "Bad Request")
   private String message;  // Detailed message
+  private String details;
   private String path;     // The URL that failed
   @JsonSerialize(using = CustomLocalDateTimeSerializer.class)
   private LocalDateTime timestamp;
