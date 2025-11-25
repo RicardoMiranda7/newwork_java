@@ -17,7 +17,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\":\"john.doe@example.com\",\n    \"password\":\"password123\"\n}",
+					"raw": "{\n    \"email\":\"john.smith@example.com\",\n    \"password\":\"password123\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -64,21 +64,22 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/absences",
+					"raw": "{{base_url}}/api/v1/absences/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"absences"
+						"absences",
+						""
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Absence Status",
+			"name": "Absence",
 			"request": {
 				"auth": {
 					"type": "bearer",
@@ -94,7 +95,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id\": 4,\n    \"employee\": \"john.smith@example.com\",\n    \"startDate\": \"2025-12-30\",\n    \"endDate\": \"2026-01-15\",\n    \"reason\": \"Family vacation for the holidays.\",\n    \"status\": \"REJECTED\"\n}",
+					"raw": "{\n    \"id\": 4,\n    \"employee\": \"john.smith@example.com\",\n    \"startDate\": \"2025-12-30\",\n    \"endDate\": \"2026-01-13\",\n    \"reason\": \"Family vacation for the holidays.\",\n    \"status\": \"PENDING\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -102,7 +103,7 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/absences/update-status",
+					"raw": "{{base_url}}/api/v1/absences/update",
 					"host": [
 						"{{base_url}}"
 					],
@@ -110,7 +111,7 @@
 						"api",
 						"v1",
 						"absences",
-						"update-status"
+						"update"
 					]
 				}
 			},
@@ -132,7 +133,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/api/v1/absences/absence-balance?id=3",
+					"raw": "{{base_url}}/api/v1/absences/absence-balance?id=2",
 					"host": [
 						"{{base_url}}"
 					],
@@ -145,7 +146,7 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "3"
+							"value": "2"
 						}
 					]
 				}
@@ -180,19 +181,20 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/absences?year=2026",
+					"raw": "{{base_url}}/api/v1/absences/?year=2025",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"absences"
+						"absences",
+						""
 					],
 					"query": [
 						{
 							"key": "year",
-							"value": "2026"
+							"value": "2025"
 						}
 					]
 				}
