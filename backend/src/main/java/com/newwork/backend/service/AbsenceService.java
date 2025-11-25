@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,7 @@ public class AbsenceService {
    * Calculates the vacation balance for a profile and year by summing ledger
    * entries.
    */
-  public int getVacationBalance(User user, int year) {
+  private int getVacationBalance(User user, int year) {
 
     // Ensure yearly allowance entry exists
     boolean allowanceExists = ledgerRepository.existsByEmployeeAndYearAndDescription(
@@ -50,11 +51,6 @@ public class AbsenceService {
     Integer balance = ledgerRepository.sumAmountByEmployeeAndYear(user, year);
 
     return balance != null ? balance : 0;
-  }
-
-
-  public List<AbsenceRequest> getAbsenceRequestsForUser(User user) {
-    return requestRepository.findByEmployee(user);
   }
 
   /**
@@ -86,6 +82,7 @@ public class AbsenceService {
    * a new absence request being saved even if validation fails.
    *
    * @param absenceDto The new absence request DTO
+   * @param user       The employee making the request
    */
   @Transactional
   public AbsenceDTO handleNewAbsenceRequest(
@@ -108,62 +105,70 @@ public class AbsenceService {
   }
 
 
+  /**
+   * Handles all possible changes performed to an AbsenceRequest. Uses role
+   * based permissions to ensure the correct modification are executed.
+   *
+   * @param absenceDto The object containing the changes requested.
+   * @param isManager  Flag to determine if the current user is manager or not.
+   * @return The new, up-to-date, DTO
+   */
   @Transactional
-  public AbsenceDTO handleAbsenceStatusChange(
-      AbsenceDTO absenceDto) {
-
+  public AbsenceDTO handleAbsenceUpdate(
+      AbsenceDTO absenceDto,
+      boolean isManager) {
     // Map DTO to Entity
-    var request = requestMapper.toEntity(absenceDto);
+    var clientRequest = requestMapper.toEntity(absenceDto);
 
     // Check if request exists
-    var existingRequest = requestRepository.findById(request.getId())
+    var existingRequest = requestRepository.findById(clientRequest.getId())
         .orElseThrow(() -> new IllegalArgumentException(
             "Absence request not found"));
 
+    // If clients sends the exact same request
+    if (existingRequest.equals(clientRequest)) {
+      throw new IllegalArgumentException("No changes detected.");
+    }
+
+    // Rejected status is final
+    if (existingRequest.getStatus() == AbsenceStatus.REJECTED) {
+      throw new IllegalArgumentException(
+          "This request is already rejected. Please create a new Absence Request.");
+    }
+
     // Extract and validate new status
-    AbsenceStatus newStatus;
-    try {
-      newStatus = absenceDto.getStatus();
-    } catch (Exception e) {
-      throw new IllegalArgumentException("New status is invalid or missing");
+    AbsenceStatus newStatus = clientRequest.getStatus();
+    // Cannot change back to pending
+    if (AbsenceStatus.PENDING.equals(newStatus)
+        && !existingRequest.getStatus().equals(AbsenceStatus.PENDING)) {
+      throw new IllegalArgumentException("New status is invalid");
     }
 
-    //  When multi-year absences are requested, split the validation and debit
-    //  across the years.
-    for (int year = existingRequest.getStartDate().getYear();
-        year <= existingRequest.getEndDate().getYear(); year++) {
-
-      // If rejecting or cancelling, credit the debited days back
-      if (newStatus == AbsenceStatus.REJECTED
-          && existingRequest.getStatus() != AbsenceStatus.REJECTED) {
-
-        // Fetch the original debit transaction, it might not exist
-        // if the request started in the previous year, but
-        // no business days were present in that period.
-        var originalDebit = ledgerRepository.findFirstByAbsenceRequestIdAndYearAndAmountLessThanOrderByCreatedAtAsc(
-            existingRequest.getId(), year, 0);
-        if (originalDebit.isPresent()) {
-          recordTransaction(existingRequest.getEmployee(),
-              existingRequest,
-              year,
-              -originalDebit.get().getAmount(),
-              "Absence request rejected");
-        }
-      } else if (newStatus == AbsenceStatus.PENDING
-          && existingRequest.getStatus() == AbsenceStatus.REJECTED) {
-        // If a rejected request is moved back to PENDING,
-        // we need to re-debit.
-        var originalCredit = ledgerRepository.findFirstByAbsenceRequestIdAndYearAndAmountGreaterThanOrderByCreatedAtAsc(
-            existingRequest.getId(), year, 0);
-        if (originalCredit.isPresent()) {
-          recordTransaction(existingRequest.getEmployee(),
-              existingRequest,
-              year,
-              -originalCredit.get().getAmount(),
-              "Absence request re-opened (PENDING)");
-        }
-      }
+    AbsenceDTO replyDto;
+    if (isManager) {
+      replyDto = handleManagerUpdate(existingRequest, clientRequest, newStatus);
+    } else {
+      replyDto = handleOwnerUpdate(existingRequest, clientRequest, newStatus);
     }
+
+    return replyDto;
+  }
+
+
+  /**
+   * Handles status changes for an absence request, adjusting ledger entries as
+   * needed. It persists both ledger and status changes
+   *
+   * @Return New, up-to-date, DTO
+   */
+  private AbsenceDTO handleAbsenceStatusChange(
+      AbsenceRequest existingRequest,
+      AbsenceStatus newStatus) {
+    // If rejecting or cancelling, credit the debited days back
+    if (newStatus == AbsenceStatus.REJECTED) {
+      revertLedgerForRequest(existingRequest);
+    }
+
     // Save the new status
     existingRequest.setStatus(newStatus);
     requestRepository.save(existingRequest);
@@ -172,7 +177,42 @@ public class AbsenceService {
     return requestMapper.toDto(existingRequest);
   }
 
+  /**
+   * Calculates and reverts the current absence ledger balance per year for a
+   * given AbsenceRequest
+   *
+   * @param existingRequest The AbsenceRequest to revert
+   */
+  private void revertLedgerForRequest(AbsenceRequest existingRequest) {
+    //  When multi-year absences are requested, split the validation and debit
+    //  across the years.
+    for (int year = existingRequest.getStartDate().getYear();
+        year <= existingRequest.getEndDate().getYear(); year++) {
 
+      // The outstanding (result of sum all debits and credits for
+      // a request for a year) should be the amount to be reverted
+      var currentBalance = ledgerRepository.sumAmountByAbsenceRequestAndYear(
+          existingRequest, year);
+      if (currentBalance != 0) {
+        recordTransaction(existingRequest.getEmployee(),
+            existingRequest,
+            year,
+            -currentBalance,
+            "Absence request rejected or modified");
+      }
+    }
+  }
+
+  /**
+   * Handles absence balance requests by calculating the current and next year
+   * balances. It inserts a new ledger transaction if the yearly credit hasn't
+   * taken place.
+   *
+   * @param profileId The profile ID of the employee
+   * @param year      The year for which to get the balance
+   * @return AbsenceBalanceResponse containing balance details
+   */
+  @Transactional
   public AbsenceBalanceResponse handleAbsenceBalanceRequest(
       Long profileId,
       int year) {
@@ -193,15 +233,123 @@ public class AbsenceService {
         .build();
   }
 
-  public List<AbsenceDTO> handleListVisibleAbsencesForUser(User user,
+  /**
+   * Lists all absences visible to the user for a given year.
+   *
+   * @param user The employee
+   * @param year The year for which to list absences
+   * @return List of AbsenceDTOs
+   */
+  @Transactional(readOnly = true)
+  public List<AbsenceDTO> handleListVisibleAbsencesForUser(
+      User user,
       int year) {
 
-    return requestRepository.fillAllApprovedOrUserRequestsByYear(user.getId(),
+    return requestRepository.findAllApprovedOrUserRequestsByYear(
+            user.getId(),
             year)
         .stream()
         .map(requestMapper::toDto)
         .toList();
   }
+
+
+  /**
+   * Handles a modification of an absence from the manager. Only status change
+   * is available.
+   *
+   * @param existingRequest The AS-IS absence request
+   * @param clientRequest   The desired TO-BE absence request
+   * @param newStatus       Status extract from the client request, for ease of
+   *                        access
+   * @return New, up-to-date, DTO
+   * @throws AccessDeniedException When request is valid, but manager tries to
+   *                               change dates or to PENDING
+   */
+  private AbsenceDTO handleManagerUpdate(
+      AbsenceRequest existingRequest,
+      AbsenceRequest clientRequest,
+      AbsenceStatus newStatus) {
+    // Manager cannot change dates
+    if (!clientRequest.getStartDate().equals(existingRequest.getStartDate())
+        || !clientRequest.getEndDate().equals(existingRequest.getEndDate())) {
+      throw new AccessDeniedException(
+          "Managers cannot change the dates of an absence request.");
+    }
+
+    // Manager can only approve or reject
+    if (newStatus != AbsenceStatus.PENDING) {
+      return handleAbsenceStatusChange(existingRequest, newStatus);
+    } else {
+      throw new AccessDeniedException(
+          "Managers cannot change status to PENDING");
+    }
+  }
+
+
+  /**
+   * Handles a modification of an absence from the owner. Performs date, status
+   * and reason updates and validations.
+   *
+   * @param existingRequest The AS-IS absence request
+   * @param clientRequest   The desired TO-BE absence request
+   * @param newStatus       Status extract from the client request, for ease of
+   *                        access
+   * @return New, up-to-date, DTO
+   * @throws IllegalArgumentException When request is no longer PENDING.
+   * @throws AccessDeniedException    When request is valid, but owner tries to
+   *                                  self-approve
+   */
+  private AbsenceDTO handleOwnerUpdate(
+      AbsenceRequest existingRequest,
+      AbsenceRequest clientRequest,
+      AbsenceStatus newStatus) {
+
+    // Employee can only update PENDING requests
+    if (existingRequest.getStatus() != AbsenceStatus.PENDING) {
+      throw new IllegalArgumentException(
+          "You can only update PENDING requests.");
+    }
+
+    // Employee cannot approve their own request
+    if (newStatus == AbsenceStatus.APPROVED) {
+      throw new AccessDeniedException(
+          "Employees cannot approve their own requests.");
+    }
+
+    // Reason update is independent
+    if (!(existingRequest.getReason().equals(clientRequest.getReason()))) {
+      existingRequest.setReason(clientRequest.getReason());
+    }
+
+    // Handle Status change has priority and isolation vs date changes.
+    if (newStatus == AbsenceStatus.REJECTED) {
+      return handleAbsenceStatusChange(existingRequest, newStatus);
+    }
+
+    // Check if dates are changing
+    boolean datesChanged =
+        !existingRequest.getStartDate().equals(clientRequest.getStartDate()) ||
+            !existingRequest.getEndDate().equals(clientRequest.getEndDate());
+
+    if (datesChanged) {
+      // Revert the old debit (Credit back the days)
+      revertLedgerForRequest(existingRequest);
+
+      // Update the request object with new dates temporarily for validation
+      existingRequest.setStartDate(clientRequest.getStartDate());
+      existingRequest.setEndDate(clientRequest.getEndDate());
+
+      // Validate balance and create new debits
+      validateAndDebitAbsenceRequest(existingRequest);
+    }
+
+    // Save and return the up-to-date request
+    requestRepository.save(existingRequest);
+
+    return requestMapper.toDto(existingRequest);
+  }
+
 
   /**
    * Validates an absence request against the employee's vacation balance and
@@ -290,7 +438,7 @@ public class AbsenceService {
    * @param bankHolidays Set of bank holiday dates
    * @return Number of business days
    */
-  public int calculateBusinessDaysForPeriod(LocalDate startDate,
+  private int calculateBusinessDaysForPeriod(LocalDate startDate,
       LocalDate endDate, Set<LocalDate> bankHolidays) {
     return startDate.datesUntil(endDate.plusDays(1))
         .filter(date -> {
@@ -303,4 +451,5 @@ public class AbsenceService {
         })
         .toArray().length;
   }
+
 }

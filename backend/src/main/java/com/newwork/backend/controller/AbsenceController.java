@@ -2,15 +2,20 @@ package com.newwork.backend.controller;
 
 import com.newwork.backend.dto.AbsenceBalanceResponse;
 import com.newwork.backend.dto.AbsenceDTO;
+import com.newwork.backend.dto.validation.OnCreate;
+import com.newwork.backend.dto.validation.OnUpdate;
 import com.newwork.backend.model.User;
+import com.newwork.backend.security.AbsenceSecurity;
+import com.newwork.backend.security.AbsenceSecurity.UpdateRole;
 import com.newwork.backend.service.AbsenceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,10 +31,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AbsenceController {
 
   private final AbsenceService absenceService;
+  private final AbsenceSecurity absenceSecurity;
 
   @PostMapping("/")
   public ResponseEntity<AbsenceDTO> createRequest(
-      @Valid @RequestBody AbsenceDTO absenceRequestDto,
+      @Validated({
+          OnCreate.class,
+          Default.class}) @RequestBody AbsenceDTO absenceRequestDto,
       @AuthenticationPrincipal User user) {
 
     // Service handles the creation logic
@@ -55,13 +63,21 @@ public class AbsenceController {
 
   @PatchMapping(path = "/update-status")
   public ResponseEntity<AbsenceDTO> updateRequestStatus(
-      @RequestBody AbsenceDTO absenceRequestDTO) {
+      @Validated({
+          OnUpdate.class,
+          Default.class}) @RequestBody AbsenceDTO absenceRequestDto,
+      @AuthenticationPrincipal User user) {
 
-    // Service handles the update logic
-    var updatedRequestDTO = absenceService.handleAbsenceStatusChange(
-        absenceRequestDTO);
+    // Custom replacement for PreAuthorize, since its necessary to pass the role
+    var role = absenceSecurity.getUpdateRole(absenceRequestDto.getId(), user);
 
-    return ResponseEntity.ok(updatedRequestDTO);
+    // Check if is Manager
+    var isManager = role.equals(UpdateRole.MANAGER);
+
+    var result = absenceService.handleAbsenceUpdate(absenceRequestDto,
+        isManager);
+
+    return ResponseEntity.ok(result);
   }
 
   @GetMapping("/absence-balance")

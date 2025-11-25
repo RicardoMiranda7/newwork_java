@@ -1,6 +1,7 @@
 package com.newwork.backend.repository;
 
 import com.newwork.backend.model.AbsenceLedger;
+import com.newwork.backend.model.AbsenceRequest;
 import com.newwork.backend.model.User;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +25,13 @@ public interface AbsenceLedgerRepository extends
       Long absenceRequestId, int year, int amount);
 
   @Query("SELECT SUM(a.amount) FROM AbsenceLedger a WHERE a.employee = :employee AND a.year = :year")
-  Integer sumAmountByEmployeeAndYear(@Param("employee") User employee,
+  Integer sumAmountByEmployeeAndYear(
+      @Param("employee") User employee,
+      @Param("year") int year);
+
+  @Query("SELECT SUM(a.amount) FROM AbsenceLedger a WHERE a.absenceRequest = :absence AND a.year = :year")
+  Integer sumAmountByAbsenceRequestAndYear(
+      @Param("absence") AbsenceRequest absenceRequest,
       @Param("year") int year);
 
   boolean existsByEmployeeAndYearAndDescription(User employee, int year,
