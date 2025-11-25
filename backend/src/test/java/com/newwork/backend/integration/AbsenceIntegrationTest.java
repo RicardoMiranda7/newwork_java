@@ -243,7 +243,7 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
     approvedRequest.setStatus(AbsenceStatus.APPROVED);
     var dto = requestMapper.toDto(approvedRequest);
 
-    mockMvc.perform(patch("/api/v1/absences/update-status")
+    mockMvc.perform(patch("/api/v1/absences/update")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(dto)))
         .andExpect(status().isOk())
@@ -269,7 +269,7 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
     var dto = requestMapper.toDto(approvedRequest);
 
     // Act: Employee tries to approve their own request
-    mockMvc.perform(patch("/api/v1/absences/update-status")
+    mockMvc.perform(patch("/api/v1/absences/update")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(dto)))
         .andExpect(status().isForbidden()); // Should be 403
@@ -298,7 +298,7 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
     updateDto.setStatus(AbsenceStatus.APPROVED);
 
     // Assert: Expect 403 Forbidden (AccessDeniedException)
-    mockMvc.perform(patch("/api/v1/absences/update-status")
+    mockMvc.perform(patch("/api/v1/absences/update")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updateDto)))
         .andExpect(status().isForbidden())
@@ -329,7 +329,7 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
     updateDto.setStatus(AbsenceStatus.PENDING);
 
     // Assert: Expect 400 Bad Request (IllegalArgumentException)
-    mockMvc.perform(patch("/api/v1/absences/update-status")
+    mockMvc.perform(patch("/api/v1/absences/update")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updateDto)))
         .andExpect(status().isBadRequest())
@@ -386,7 +386,7 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
     // 1. Revert -24 (Balance becomes 24)
     // 2. Try to debit 31 vs 24
     // 3. Fail
-    mockMvc.perform(patch("/api/v1/absences/update-status")
+    mockMvc.perform(patch("/api/v1/absences/update")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updateDto)))
         .andExpect(status().isBadRequest())
@@ -443,7 +443,7 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
     // 1. Revert -24 (Balance becomes 24)
     // 2. Try to debit 23 vs 24
     // 3. Success
-    mockMvc.perform(patch("/api/v1/absences/update-status")
+    mockMvc.perform(patch("/api/v1/absences/update")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updateDto)))
         .andExpect(status().isOk())

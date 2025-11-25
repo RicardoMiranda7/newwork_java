@@ -61,7 +61,7 @@ public class AbsenceController {
     return ResponseEntity.ok(listOfAbsences);
   }
 
-  @PatchMapping(path = "/update-status")
+  @PatchMapping(path = "/update")
   public ResponseEntity<AbsenceDTO> updateRequestStatus(
       @Validated({
           OnUpdate.class,
