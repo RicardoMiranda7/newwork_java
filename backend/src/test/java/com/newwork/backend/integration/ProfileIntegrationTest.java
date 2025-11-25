@@ -10,8 +10,10 @@ import com.newwork.backend.model.UserProfile;
 import com.newwork.backend.repository.ProfileRepository;
 import com.newwork.backend.repository.UserRepository;
 import java.math.BigDecimal;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,10 +22,10 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-// Simpler tests, no need for BeforeAll and TestInstance.LifeCycle
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @SpringBootTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProfileIntegrationTest extends BaseIntegrationTest {
 
   @Autowired
@@ -61,6 +63,13 @@ class ProfileIntegrationTest extends BaseIntegrationTest {
     coworker = User.builder().email("coworker@test.com").username("coworker")
         .password("pass").build();
     userRepository.save(coworker);
+  }
+
+  // Use AfterAll to clear all the db
+  @AfterAll
+  void clear() {
+    profileRepository.deleteAll();
+    userRepository.deleteAll();
   }
 
   @Test

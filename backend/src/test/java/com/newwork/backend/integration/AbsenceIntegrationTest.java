@@ -25,6 +25,7 @@ import com.newwork.backend.repository.ProfileRepository;
 import com.newwork.backend.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +68,7 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
   private UserProfile testProfile;
 
 
-  // Use beforeAll for shared database state
+  // Use BeforeAll for shared database state
   @BeforeAll
   void setUpOnce() {
     // 0. Clean user and profile
@@ -113,10 +114,19 @@ class AbsenceIntegrationTest extends BaseIntegrationTest {
         .build());
   }
 
+  // Use AfterAll to clear all the db
+  @AfterAll
+  void clear() {
+    ledgerRepository.deleteAll();
+    absenceRequestRepository.deleteAll();
+    profileRepository.deleteAll();
+    userRepository.deleteAll();
+  }
+
   // Use beforeEach to ensure clean starting state
   @BeforeEach
   void setUp() {
-    // 0. Clean DB to ensure test isolation
+    // Clean DB to ensure test isolation
     ledgerRepository.deleteAll();
     absenceRequestRepository.deleteAll();
   }
