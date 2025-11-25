@@ -9,6 +9,7 @@ import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -54,6 +55,15 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.BAD_REQUEST, errorMessage, request);
   }
 
+  // Handle Invalid Sort Parameters (Spring Data JPA)
+  @ExceptionHandler(PropertyReferenceException.class)
+  public ResponseEntity<ApiErrorResponse> handlePropertyReferenceException(
+      PropertyReferenceException ex, HttpServletRequest request) {
+    String message = "Invalid sort property: " + ex.getPropertyName()
+        + ". Suggested: fullName";
+    log.warn("Bad Request: {}", ex.getMessage());
+    return buildResponse(HttpStatus.BAD_REQUEST, message, request);
+  }
 
   // 401 Unauthorized - Login failed
   @ExceptionHandler(BadCredentialsException.class)
