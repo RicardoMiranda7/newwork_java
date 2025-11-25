@@ -1,6 +1,7 @@
 package com.newwork.backend.security;
 
 import com.newwork.backend.model.User;
+import com.newwork.backend.model.UserProfile;
 import com.newwork.backend.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -33,11 +34,20 @@ public class ProfileSecurity {
         .orElse(false);
   }
 
+  public boolean isManagerOfProfile(UserProfile profile, User currentUser) {
+    return profile.getManager() != null &&
+        profile.getManager().getId().equals(currentUser.getId());
+  }
+
   public boolean isOwner(Long profileId, User currentUser) {
     return profileRepository.findById(profileId)
         .map(profile -> profile.getUser().getId().equals(currentUser.getId()))
         .orElse(false);
   }
 
+  public boolean isOwnerOfProfile(UserProfile profile, User currentUser) {
+    return profile.getUser() != null &&
+        profile.getUser().getId().equals(currentUser.getId());
+  }
 
 }

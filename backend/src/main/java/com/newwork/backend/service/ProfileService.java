@@ -66,4 +66,10 @@ public class ProfileService {
     return profileMapper.toDto(updatedProfile);
   }
 
+  @Transactional(readOnly = true)
+  public UserProfile getProfileOfUser(User user) {
+    return profileRepository.findByUserId(user.getId())
+        .orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+  }
+
 }
