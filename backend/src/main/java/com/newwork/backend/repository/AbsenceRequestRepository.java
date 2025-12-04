@@ -34,13 +34,13 @@ public interface AbsenceRequestRepository extends
   @Query("""
       SELECT a FROM AbsenceRequest a
       JOIN FETCH a.employee
-      WHERE (a.status = 'APPROVED'
-             OR (a.employee.id = :employeeId AND a.status <> 'APPROVED'))
+      WHERE (a.status = :status)
         AND (extract(year from a.startDate) = :year
              OR extract(year from a.endDate) = :year)
       """)
   List<AbsenceRequest> findAllApprovedOrUserRequestsByYear(
       @Param("employeeId") long employeeId,
-      @Param("year") int year
+      @Param("year") int year,
+      @Param("status") AbsenceStatus status
   );
 }

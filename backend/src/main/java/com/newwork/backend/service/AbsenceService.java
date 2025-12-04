@@ -243,11 +243,34 @@ public class AbsenceService {
   @Transactional(readOnly = true)
   public List<AbsenceDTO> handleListVisibleAbsencesForUser(
       User user,
-      int year) {
+      int year,
+      String status) {
+
+    /*
+     * Could use instead of getDescription:
+     * - AbsenceStatus.valueOf(status) == AbsenceStatus.PENDING
+     * - AbsenceStatus.REJECTED.toString().equalsIgnoreCase(status)
+     */
+    AbsenceStatus filter = null;
+    if (status == null || status.isBlank()) {
+      filter = AbsenceStatus.APPROVED;
+    } else {
+      for (AbsenceStatus absenceStatus : AbsenceStatus.values()) {
+        if (absenceStatus.getDescription().equalsIgnoreCase(status)) {
+          filter = absenceStatus;
+          break;
+        }
+      }
+    }
+    // Could now find match for provided filter
+    if (filter == null) {
+      throw new IllegalArgumentException("Invalid status filter");
+    }
 
     return requestRepository.findAllApprovedOrUserRequestsByYear(
             user.getId(),
-            year)
+            year,
+            filter)
         .stream()
         .map(requestMapper::toDto)
         .toList();
