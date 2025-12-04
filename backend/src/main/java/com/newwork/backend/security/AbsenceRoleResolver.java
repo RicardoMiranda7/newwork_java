@@ -31,7 +31,7 @@ public class AbsenceRoleResolver {
    * Results are cached in Redis to prevent querying the DB again. Key format:
    * "absence_roles::123-456" (AbsenceID-UserID)
    *
-   * @return MANAGER or OWNER
+   * @return String MANAGER or OWNER
    * @throws AccessDeniedException if the user has no rights.
    */
   @Transactional(readOnly = true)

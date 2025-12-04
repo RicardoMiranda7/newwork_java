@@ -32,7 +32,7 @@ public class AbsenceSecurity {
   }
 
   /**
-   * Expose if is manager role as flag
+   * Check if the user is manager of the profile for a certain absence request
    */
   @Transactional(readOnly = true)
   public boolean isManager(Long absenceId, User currentUser) {
