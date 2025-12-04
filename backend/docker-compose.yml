@@ -13,17 +13,28 @@ services:
   #    ports:
   #      - "5432:5432"
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   backend:
     build: .
     ports:
       - "8080:8080" # Spring Boot runs on 8080 by default
     depends_on:
       - db
+      - redis
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/newwork_db
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
       # Add Hugging Face key later
 
 volumes:
   postgres_data:
+  redis_data:
