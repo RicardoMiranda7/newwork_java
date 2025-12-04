@@ -6,7 +6,6 @@ import com.newwork.backend.dto.validation.OnCreate;
 import com.newwork.backend.dto.validation.OnUpdate;
 import com.newwork.backend.model.User;
 import com.newwork.backend.security.AbsenceSecurity;
-import com.newwork.backend.security.AbsenceSecurity.UpdateRole;
 import com.newwork.backend.service.AbsenceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.groups.Default;
@@ -63,17 +62,15 @@ public class AbsenceController {
   }
 
   @PatchMapping(path = "/update")
-  public ResponseEntity<AbsenceDTO> updateRequestStatus(
+  @PreAuthorize("@absenceSecurity.hasAbsenceUpdatePermission(#absenceRequestDto.getId, #user)")
+  public ResponseEntity<AbsenceDTO> updateAbsenceRequest(
       @Validated({
           OnUpdate.class,
           Default.class}) @RequestBody AbsenceDTO absenceRequestDto,
       @AuthenticationPrincipal User user) {
 
-    // Custom replacement for PreAuthorize, since its necessary to pass the role
-    var role = absenceSecurity.getUpdateRole(absenceRequestDto.getId(), user);
-
-    // Check if is Manager
-    var isManager = role.equals(UpdateRole.MANAGER);
+    // Flag for manager/owner role
+    var isManager = absenceSecurity.isManager(absenceRequestDto.getId(), user);
 
     var result = absenceService.handleAbsenceUpdate(absenceRequestDto,
         isManager);

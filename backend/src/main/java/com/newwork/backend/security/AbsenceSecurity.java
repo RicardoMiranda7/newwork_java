@@ -8,7 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
+@Component("absenceSecurity")
 @RequiredArgsConstructor
 public class AbsenceSecurity {
 
@@ -31,7 +31,7 @@ public class AbsenceSecurity {
    * @return MANAGER or OWNER
    */
   @Transactional(readOnly = true)
-  public UpdateRole getUpdateRole(Long absenceId, User currentUser) {
+  protected UpdateRole getUpdateRole(Long absenceId, User currentUser) {
     AbsenceRequest request = absenceRequestRepository.findById(absenceId)
         .orElseThrow(
             () -> new IllegalArgumentException("Absence request not found"));
@@ -54,4 +54,30 @@ public class AbsenceSecurity {
     throw new AccessDeniedException(
         "You do not have permission to update this request.");
   }
+
+  /**
+   * Check if a user has permission to edit a certain absence request
+   *
+   * @Return True if the user has permission
+   */
+  @Transactional(readOnly = true)
+  public boolean hasAbsenceUpdatePermission(Long absenceId, User currentUser) {
+    try {
+      getUpdateRole(absenceId, currentUser);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  /**
+   * Expose if is manager role as flag. Can leverage Hibernate cache if
+   * configured to avoid a second DB request, since one was done in
+   * @hasUpdatePermission
+   */
+  @Transactional(readOnly = true)
+  public boolean isManager(Long absenceId, User currentUser) {
+    return getUpdateRole(absenceId, currentUser) == UpdateRole.MANAGER;
+  }
+
 }
