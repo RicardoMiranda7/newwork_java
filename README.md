@@ -13,6 +13,7 @@ The application is fully containerized with Docker for consistent and reliable d
 ### Backend Tech Stack
 - Core: Java 21, Spring Boot 3.5.8
 - Data: Spring Data JPA (Hibernate), PostgreSQL 17
+- Cache: Redis (very simple implemention)
 - Security: Spring Security (Stateless JWT)
 - Migrations: Flyway
 - Testing: JUnit 5, MockMvc, Testcontainers (Integration), ArchUnit (Architecture enforcement)
